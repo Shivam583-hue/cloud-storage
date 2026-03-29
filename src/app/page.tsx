@@ -230,7 +230,7 @@ export default function DrivePage() {
     { id: "root", name: "My Drive", items: mockData },
   ])
 
-  const currentItems = currentPath[currentPath.length - 1].items
+  const currentItems = currentPath[currentPath.length - 1]!.items
 
   const handleFolderClick = (item: DriveItem) => {
     if (item.type === "folder" && item.children) {
