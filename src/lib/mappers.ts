@@ -8,7 +8,7 @@ export function mapDbFile(file: DB_FileType): FileItem {
     type: file.type,
     size: String(file.size),
     url: file.url,
-    modified: file.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    modified: new Date(file.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
   }
 }
 
@@ -17,6 +17,6 @@ export function mapDbFolder(folder: DB_FolderType): FolderItem {
     id: String(folder.id),
     name: folder.name,
     type: "folder",
-    modified: folder.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+    modified: new Date(folder.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
   }
 }
