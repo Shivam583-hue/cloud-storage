@@ -3,26 +3,16 @@ import { files_table, folders_table } from "@/server/db/schema"
 import { eq } from "drizzle-orm"
 import { mapDbFile, mapDbFolder } from "@/lib/mappers"
 import { type DriveItem } from "@/lib/types"
-import DriveClient from "@/app/DriveClient"
+import DriveClient, { type BreadcrumbItem } from "@/app/DriveClient"
 
-export default async function DrivePage(props: {
-  params: Promise<{ folderId: string }>;
-}) {
+export default async function FolderPage({ params }: { params: Promise<{ folderId: string }> }) {
+  const { folderId } = await params
+  const folderIdNum = Number(folderId)
 
-  const params = await props.params;
-
-  const parsedFolderId = parseInt(params.folderId);
-  if (isNaN(parsedFolderId)) {
-    return <div>Invalid Folder ID</div>
-  }
-
-  const [folders, files] = await Promise.all([
-    // folder
-    db.select().from(folders_table).where(eq(folders_table.parent, parsedFolderId)),
-
-
-    //file
-    db.select().from(files_table).where(eq(files_table.parent, parsedFolderId)),
+  const [folders, files, currentFolder] = await Promise.all([
+    db.select().from(folders_table).where(eq(folders_table.parent, folderIdNum)),
+    db.select().from(files_table).where(eq(files_table.parent, folderIdNum)),
+    db.select().from(folders_table).where(eq(folders_table.id, folderIdNum)),
   ])
 
   const items: DriveItem[] = [
@@ -30,5 +20,10 @@ export default async function DrivePage(props: {
     ...files.map(mapDbFile),
   ]
 
-  return <DriveClient initialItems={items} />
+  // for now just one crumb — full ancestor chain needs a recursive query
+  const breadcrumbs: BreadcrumbItem[] = currentFolder[0]
+    ? [{ id: String(currentFolder[0].id), name: currentFolder[0].name }]
+    : []
+
+  return <DriveClient items={items} breadcrumbs={breadcrumbs} />
 }
