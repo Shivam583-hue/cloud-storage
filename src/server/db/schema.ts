@@ -1,29 +1,56 @@
-// Example model schema from the Drizzle docs
-// https://orm.drizzle.team/docs/sql-schema-declaration
+import {
+  int,
+  text,
+  index,
+  singlestoreTableCreator,
+  bigint,
+  timestamp,
+} from "drizzle-orm/singlestore-core";
 
-import { sql } from "drizzle-orm";
-import { index, sqliteTableCreator } from "drizzle-orm/sqlite-core";
-
-/**
- * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
- * database instance for multiple projects.
- *
- * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
- */
-export const createTable = sqliteTableCreator(
-  (name) => `cloud-storage_${name}`,
+export const createTable = singlestoreTableCreator(
+  (name) => `drive_tutorial_${name}`,
 );
 
-export const posts = createTable(
-  "post",
-  (d) => ({
-    id: d.integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
-    name: d.text({ length: 256 }),
-    createdAt: d
-      .integer({ mode: "timestamp" })
-      .default(sql`(unixepoch())`)
-      .notNull(),
-    updatedAt: d.integer({ mode: "timestamp" }).$onUpdate(() => new Date()),
-  }),
-  (t) => [index("name_idx").on(t.name)],
+export const files_table = createTable(
+  "files_table",
+  {
+    id: bigint("id", { mode: "number", unsigned: true })
+      .primaryKey()
+      .autoincrement(),
+    ownerId: text("owner_id").notNull(),
+    name: text("name").notNull(),
+    type: text("type", { enum: ["document", "image", "video", "other"] }).notNull(),
+    size: int("size").notNull(),               // bytes
+    url: text("url").notNull(),
+    mimeType: text("mime_type"),
+    parent: bigint("parent", { mode: "number", unsigned: true }),  // null = root
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("files_parent_index").on(t.parent),
+    index("files_owner_id_index").on(t.ownerId),
+  ],
 );
+
+export type DB_FileType = typeof files_table.$inferSelect;
+
+export const folders_table = createTable(
+  "folders_table",
+  {
+    id: bigint("id", { mode: "number", unsigned: true })
+      .primaryKey()
+      .autoincrement(),
+    ownerId: text("owner_id").notNull(),
+    name: text("name").notNull(),
+    parent: bigint("parent", { mode: "number", unsigned: true }),  // null = root
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("folders_parent_index").on(t.parent),
+    index("folders_owner_id_index").on(t.ownerId),
+  ],
+);
+
+export type DB_FolderType = typeof folders_table.$inferSelect;
