@@ -2,6 +2,8 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { mockData } from "@/lib/mockData"
+import { type DriveItem, type FileType } from "@/lib/types"
 import {
   Folder,
   FileText,
@@ -13,201 +15,12 @@ import {
   Home,
 } from "lucide-react"
 
-type FileType = "folder" | "document" | "image" | "video" | "other"
-
-interface DriveItem {
-  id: string
-  name: string
-  type: FileType
-  size?: string
-  modified: string
-  url?: string
-  children?: DriveItem[]
+function getFolderIcon() {
+  return <Folder className="h-5 w-5 text-blue-400" />
 }
-
-const mockData: DriveItem[] = [
-  {
-    id: "1",
-    name: "Documents",
-    type: "folder",
-    modified: "Mar 15, 2026",
-    children: [
-      {
-        id: "1-1",
-        name: "Work",
-        type: "folder",
-        modified: "Mar 10, 2026",
-        children: [
-          {
-            id: "1-1-1",
-            name: "Q1 Report.pdf",
-            type: "document",
-            size: "2.4 MB",
-            modified: "Mar 8, 2026",
-            url: "https://example.com/files/q1-report.pdf",
-          },
-          {
-            id: "1-1-2",
-            name: "Budget 2026.xlsx",
-            type: "document",
-            size: "1.2 MB",
-            modified: "Mar 5, 2026",
-            url: "https://example.com/files/budget-2026.xlsx",
-          },
-        ],
-      },
-      {
-        id: "1-2",
-        name: "Personal",
-        type: "folder",
-        modified: "Mar 12, 2026",
-        children: [
-          {
-            id: "1-2-1",
-            name: "Resume.pdf",
-            type: "document",
-            size: "156 KB",
-            modified: "Feb 20, 2026",
-            url: "https://example.com/files/resume.pdf",
-          },
-        ],
-      },
-      {
-        id: "1-3",
-        name: "Meeting Notes.docx",
-        type: "document",
-        size: "45 KB",
-        modified: "Mar 14, 2026",
-        url: "https://example.com/files/meeting-notes.docx",
-      },
-    ],
-  },
-  {
-    id: "2",
-    name: "Photos",
-    type: "folder",
-    modified: "Mar 20, 2026",
-    children: [
-      {
-        id: "2-1",
-        name: "Vacation 2025",
-        type: "folder",
-        modified: "Dec 28, 2025",
-        children: [
-          {
-            id: "2-1-1",
-            name: "Beach.jpg",
-            type: "image",
-            size: "3.2 MB",
-            modified: "Dec 25, 2025",
-            url: "https://picsum.photos/1920/1080?random=1",
-          },
-          {
-            id: "2-1-2",
-            name: "Sunset.jpg",
-            type: "image",
-            size: "2.8 MB",
-            modified: "Dec 26, 2025",
-            url: "https://picsum.photos/1920/1080?random=2",
-          },
-        ],
-      },
-      {
-        id: "2-2",
-        name: "Profile Picture.png",
-        type: "image",
-        size: "512 KB",
-        modified: "Jan 15, 2026",
-        url: "https://picsum.photos/400/400?random=3",
-      },
-    ],
-  },
-  {
-    id: "3",
-    name: "Videos",
-    type: "folder",
-    modified: "Mar 18, 2026",
-    children: [
-      {
-        id: "3-1",
-        name: "Tutorial.mp4",
-        type: "video",
-        size: "156 MB",
-        modified: "Mar 10, 2026",
-        url: "https://example.com/files/tutorial.mp4",
-      },
-      {
-        id: "3-2",
-        name: "Conference Recording.mp4",
-        type: "video",
-        size: "892 MB",
-        modified: "Mar 5, 2026",
-        url: "https://example.com/files/conference.mp4",
-      },
-    ],
-  },
-  {
-    id: "4",
-    name: "Project Proposal.pdf",
-    type: "document",
-    size: "3.1 MB",
-    modified: "Mar 25, 2026",
-    url: "https://example.com/files/proposal.pdf",
-  },
-  {
-    id: "5",
-    name: "Design Assets",
-    type: "folder",
-    modified: "Mar 22, 2026",
-    children: [
-      {
-        id: "5-1",
-        name: "Logo.svg",
-        type: "image",
-        size: "24 KB",
-        modified: "Mar 20, 2026",
-        url: "https://example.com/files/logo.svg",
-      },
-      {
-        id: "5-2",
-        name: "Brand Guidelines.pdf",
-        type: "document",
-        size: "8.5 MB",
-        modified: "Mar 18, 2026",
-        url: "https://example.com/files/brand-guidelines.pdf",
-      },
-      {
-        id: "5-3",
-        name: "Icons",
-        type: "folder",
-        modified: "Mar 15, 2026",
-        children: [
-          {
-            id: "5-3-1",
-            name: "icon-set.zip",
-            type: "other",
-            size: "2.1 MB",
-            modified: "Mar 14, 2026",
-            url: "https://example.com/files/icon-set.zip",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "6",
-    name: "Notes.txt",
-    type: "document",
-    size: "2 KB",
-    modified: "Mar 28, 2026",
-    url: "https://example.com/files/notes.txt",
-  },
-]
 
 function getFileIcon(type: FileType) {
   switch (type) {
-    case "folder":
-      return <Folder className="h-5 w-5 text-blue-400" />
     case "document":
       return <FileText className="h-5 w-5 text-blue-300" />
     case "image":
@@ -249,7 +62,6 @@ export default function DrivePage() {
     alert("Upload functionality would open a file picker here!")
   }
 
-  // Sort items: folders first, then files
   const sortedItems = [...currentItems].sort((a, b) => {
     if (a.type === "folder" && b.type !== "folder") return -1
     if (a.type !== "folder" && b.type === "folder") return 1
@@ -258,7 +70,6 @@ export default function DrivePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border">
         <div className="mx-auto max-w-6xl px-4 py-4">
           <div className="flex items-center justify-between">
@@ -271,9 +82,7 @@ export default function DrivePage() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="mx-auto max-w-6xl px-4 py-6">
-        {/* Breadcrumbs */}
         <nav className="mb-6">
           <ol className="flex items-center gap-1 text-sm">
             {currentPath.map((crumb, index) => (
@@ -283,10 +92,11 @@ export default function DrivePage() {
                 )}
                 <button
                   onClick={() => handleBreadcrumbClick(index)}
-                  className={`flex items-center gap-1.5 rounded-md px-2 py-1 transition-colors hover:bg-accent ${index === currentPath.length - 1
-                    ? "font-medium text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                    }`}
+                  className={`flex items-center gap-1.5 rounded-md px-2 py-1 transition-colors hover:bg-accent ${
+                    index === currentPath.length - 1
+                      ? "font-medium text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
                 >
                   {index === 0 && <Home className="h-4 w-4" />}
                   {crumb.name}
@@ -296,9 +106,7 @@ export default function DrivePage() {
           </ol>
         </nav>
 
-        {/* File List */}
         <div className="rounded-lg border border-border">
-          {/* List Header */}
           <div className="grid grid-cols-12 gap-4 border-b border-border px-4 py-3 text-sm font-medium text-muted-foreground">
             <div className="col-span-6">Name</div>
             <div className="col-span-2">Modified</div>
@@ -306,7 +114,6 @@ export default function DrivePage() {
             <div className="col-span-2">Type</div>
           </div>
 
-          {/* List Items */}
           <div className="divide-y divide-border">
             {sortedItems.length === 0 ? (
               <div className="px-4 py-12 text-center text-muted-foreground">
@@ -338,19 +145,20 @@ function DriveListItem({ item, onFolderClick }: DriveListItemProps) {
 
   const content = (
     <div
-      className={`grid grid-cols-12 gap-4 px-4 py-3 text-sm transition-colors hover:bg-accent ${isFolder ? "cursor-pointer" : ""
-        }`}
+      className={`grid grid-cols-12 gap-4 px-4 py-3 text-sm transition-colors hover:bg-accent ${
+        isFolder ? "cursor-pointer" : ""
+      }`}
       onClick={isFolder ? () => onFolderClick(item) : undefined}
     >
       <div className="col-span-6 flex items-center gap-3">
-        {getFileIcon(item.type)}
+        {isFolder ? getFolderIcon() : getFileIcon(item.type)}
         <span className="truncate text-foreground">{item.name}</span>
       </div>
       <div className="col-span-2 flex items-center text-muted-foreground">
         {item.modified}
       </div>
       <div className="col-span-2 flex items-center text-muted-foreground">
-        {item.size ?? "—"}
+        {isFolder ? "—" : (item.size ?? "—")}
       </div>
       <div className="col-span-2 flex items-center capitalize text-muted-foreground">
         {item.type}
@@ -363,12 +171,7 @@ function DriveListItem({ item, onFolderClick }: DriveListItemProps) {
   }
 
   return (
-    <a
-      href={item.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block"
-    >
+    <a href={item.url} target="_blank" rel="noopener noreferrer" className="block">
       {content}
     </a>
   )
