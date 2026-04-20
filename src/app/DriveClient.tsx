@@ -2,7 +2,6 @@
 
 import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
 import { toast } from "sonner"
-// import { Button } from "@/components/ui/button"
 import { type DriveItem, type FileType } from "@/lib/types"
 import {
   Folder,
@@ -61,18 +60,22 @@ export default function DriveClient({ items, breadcrumbs, folderId }: DriveClien
         <div className="mx-auto max-w-6xl px-4 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold text-foreground">Drive</h1>
-            <UploadButton
-              endpoint="imageUploader"
-              input={{ folderId: String(folderId) }}
-              onClientUploadComplete={() => {
-                toast.success("File Uploaded!")
-                navigate.refresh()
-              }}
-              onUploadError={(err) => {
-                toast.error(err.message)
-              }}
-            />
-            <div>
+            <div className="flex items-center gap-4">
+              <UploadButton
+                endpoint="driveUploader"
+                input={{ folderId: String(folderId) }}
+                appearance={{
+                  button: "bg-[#51a2ff] px-4",
+                  allowedContent: "hidden",
+                }}
+                onClientUploadComplete={() => {
+                  toast.success("File Uploaded!")
+                  navigate.refresh()
+                }}
+                onUploadError={(err) => {
+                  toast.error(err.message)
+                }}
+              />
               <Show when="signed-out">
                 <SignInButton />
                 <SignUpButton>
