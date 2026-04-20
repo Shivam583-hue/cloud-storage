@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
+import { Toaster } from "@/components/ui/sonner"
 import { ClerkProvider, Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
@@ -8,9 +9,9 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Drive Clone',
-  description: 'A Google Drive Clone UI',
-  generator: 'v0.app',
+  title: 'Ryuga Storage',
+  description: 'Cloud storage made by ryuga',
+  // generator: 'v0.app',
   icons: {
     icon: [
       {
@@ -41,6 +42,7 @@ export default function RootLayout({
         <body className="font-sans antialiased">
           {children}
           <Analytics />
+          <Toaster />
         </body>
       </html>
     </ClerkProvider>

@@ -1,41 +1,22 @@
+import { auth } from "@clerk/nextjs/server"
+import { eq } from "drizzle-orm"
 import { db } from "@/server/db"
-import { mockFiles } from "@/lib/mockFiles"
 import { files_table, folders_table } from "@/server/db/schema"
-import { mockFolders } from "@/lib/mockFolders"
 
-const MOCK_USER_ID = "seed_user"
+export default async function SandboxPage() {
+  const user = await auth()
+  if (!user.userId) throw new Error("User not found")
 
-const SandBoxPage = () => {
+  const [folders, files] = await Promise.all([
+    db.select().from(folders_table).where(eq(folders_table.ownerId, user.userId)),
+    db.select().from(files_table).where(eq(files_table.ownerId, user.userId)),
+  ])
+
+  console.log({ folders, files })
+
   return (
     <div className="flex flex-col gap-4">
-      <form action={async () => {
-        "use server"
-
-        const folder = await db.insert(folders_table).values(
-          mockFolders.map((folder, index) => ({
-            id: index + 1,
-            name: folder.name,
-            ownerId: MOCK_USER_ID,
-            parent: index !== 0 ? 1 : null,
-          }))
-        )
-
-        const file = await db.insert(files_table).values(
-          mockFiles.map((file, index) => ({
-            name: file.name,
-            ownerId: MOCK_USER_ID,
-            type: file.type,
-            size: 50,
-            url: file.url ?? "",
-            parent: (index % 3) + 1,
-          }))
-        )
-        console.log(file, folder)
-      }}>
-        <button type="submit">Seed</button>
-      </form>
+      <pre className="text-xs">{JSON.stringify({ folders, files }, null, 2)}</pre>
     </div>
   )
 }
-
-export default SandBoxPage

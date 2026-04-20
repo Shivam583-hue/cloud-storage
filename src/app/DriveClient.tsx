@@ -1,7 +1,8 @@
 "use client"
 
 import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
-import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
+// import { Button } from "@/components/ui/button"
 import { type DriveItem, type FileType } from "@/lib/types"
 import {
   Folder,
@@ -10,11 +11,11 @@ import {
   FileVideo,
   File,
   ChevronRight,
-  Upload,
   Home,
 } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { UploadButton } from '@/components/uploadthing'
+import { useRouter } from 'next/navigation'
 
 function getFolderIcon() {
   return <Folder className="h-5 w-5 text-blue-400" />
@@ -41,10 +42,10 @@ export interface BreadcrumbItem {
 interface DriveClientProps {
   items: DriveItem[]
   breadcrumbs: BreadcrumbItem[]  // built and passed in by the server component
+  folderId: number
 }
 
-export default function DriveClient({ items, breadcrumbs }: DriveClientProps) {
-  const router = useRouter()
+export default function DriveClient({ items, breadcrumbs, folderId }: DriveClientProps) {
 
   const sortedItems = [...items].sort((a, b) => {
     if (a.type === "folder" && b.type !== "folder") return -1
@@ -52,16 +53,25 @@ export default function DriveClient({ items, breadcrumbs }: DriveClientProps) {
     return a.name.localeCompare(b.name)
   })
 
+  const navigate = useRouter()
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
         <div className="mx-auto max-w-6xl px-4 py-4">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold text-foreground">Drive</h1>
-            {/*   <Button className="gap-2"> */}
-            {/*     <Upload className="h-4 w-4" /> */}
-            {/*     Upload */}
-            {/*   </Button> */}
+            <UploadButton
+              endpoint="imageUploader"
+              input={{ folderId: String(folderId) }}
+              onClientUploadComplete={() => {
+                toast.success("File Uploaded!")
+                navigate.refresh()
+              }}
+              onUploadError={(err) => {
+                toast.error(err.message)
+              }}
+            />
             <div>
               <Show when="signed-out">
                 <SignInButton />

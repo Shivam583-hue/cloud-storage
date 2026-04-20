@@ -1,8 +1,37 @@
-import { unstable_cache } from "next/cache"
+import { revalidateTag, unstable_cache } from "next/cache"
 import { db } from "@/server/db"
 import { files_table, folders_table } from "@/server/db/schema"
 import { eq, isNull } from "drizzle-orm"
 import type { BreadcrumbItem } from "@/app/DriveClient"
+
+export const MUTATIONS = {
+  createFile: async function (input: {
+    file: {
+      name: string
+      size: number
+      url: string
+      type: "document" | "image" | "video" | "other"
+      parent: number | null
+    }
+    userId: string
+  }) {
+    await db.insert(files_table).values({
+      name: input.file.name,
+      size: input.file.size,
+      url: input.file.url,
+      type: input.file.type,
+      parent: input.file.parent,
+      ownerId: input.userId,
+    })
+
+    // invalidate the right cache depending on whether it's root or nested
+    if (input.file.parent === null) {
+      revalidateTag("root-contents", 'max')
+    } else {
+      revalidateTag("folder-contents", 'max')
+    }
+  }
+}
 
 export const getFolderContents = unstable_cache(
   async (folderId: number) => {

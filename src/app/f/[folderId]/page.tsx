@@ -17,5 +17,5 @@ export default async function FolderPage({ params }: { params: Promise<{ folderI
     ...files.map(mapDbFile),
   ]
 
-  return <DriveClient items={items} breadcrumbs={breadcrumbs} />
+  return <DriveClient items={items} breadcrumbs={breadcrumbs} folderId={folderIdNum} />
 }
