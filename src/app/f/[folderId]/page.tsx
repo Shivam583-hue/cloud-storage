@@ -1,6 +1,6 @@
 import { mapDbFile, mapDbFolder } from "@/lib/mappers"
 import { type DriveItem } from "@/lib/types"
-import DriveClient from "@/app/DriveClient"
+import DriveClient from "./DriveClient"
 import { getFolderContents, getBreadcrumbs } from "@/server/db/queries"
 
 export default async function FolderPage({ params }: { params: Promise<{ folderId: string }> }) {

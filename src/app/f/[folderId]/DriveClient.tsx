@@ -1,6 +1,7 @@
 "use client"
 
 import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
+import { deleteFile } from '@/server/actions'
 import { toast } from "sonner"
 import { type DriveItem, type FileType } from "@/lib/types"
 import {
@@ -11,6 +12,7 @@ import {
   File,
   ChevronRight,
   Home,
+  Trash2,
 } from "lucide-react"
 import Link from "next/link"
 import { UploadButton } from '@/components/uploadthing'
@@ -40,12 +42,11 @@ export interface BreadcrumbItem {
 
 interface DriveClientProps {
   items: DriveItem[]
-  breadcrumbs: BreadcrumbItem[]  // built and passed in by the server component
+  breadcrumbs: BreadcrumbItem[]
   folderId: number
 }
 
 export default function DriveClient({ items, breadcrumbs, folderId }: DriveClientProps) {
-
   const sortedItems = [...items].sort((a, b) => {
     if (a.type === "folder" && b.type !== "folder") return -1
     if (a.type !== "folder" && b.type === "folder") return 1
@@ -90,10 +91,9 @@ export default function DriveClient({ items, breadcrumbs, folderId }: DriveClien
             </div>
           </div>
         </div>
-      </header >
+      </header>
 
       <main className="mx-auto max-w-6xl px-4 py-6">
-        {/* Breadcrumbs */}
         <nav className="mb-6">
           <ol className="flex items-center gap-1 text-sm">
             <li className="flex items-center gap-1">
@@ -111,8 +111,8 @@ export default function DriveClient({ items, breadcrumbs, folderId }: DriveClien
                 <Link
                   href={`/f/${crumb.id}`}
                   className={`flex items-center gap-1.5 rounded-md px-2 py-1 transition-colors hover:bg-accent ${index === breadcrumbs.length - 1
-                    ? "font-medium text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                      ? "font-medium text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
                     }`}
                 >
                   {crumb.name}
@@ -122,13 +122,13 @@ export default function DriveClient({ items, breadcrumbs, folderId }: DriveClien
           </ol>
         </nav>
 
-        {/* File List */}
         <div className="rounded-lg border border-border">
           <div className="grid grid-cols-12 gap-4 border-b border-border px-4 py-3 text-sm font-medium text-muted-foreground">
             <div className="col-span-6">Name</div>
             <div className="col-span-2">Modified</div>
             <div className="col-span-2">Size</div>
-            <div className="col-span-2">Type</div>
+            <div className="col-span-1">Type</div>
+            <div className="col-span-1"></div>
           </div>
 
           <div className="divide-y divide-border">
@@ -138,22 +138,35 @@ export default function DriveClient({ items, breadcrumbs, folderId }: DriveClien
               </div>
             ) : (
               sortedItems.map((item) => (
-                <DriveListItem key={item.id} item={item} />
+                <DriveListItem key={item.id} item={item} onDelete={() => navigate.refresh()} />
               ))
             )}
           </div>
         </div>
       </main>
-    </div >
+    </div>
   )
 }
 
 interface DriveListItemProps {
   item: DriveItem
+  onDelete: () => void
 }
 
-function DriveListItem({ item }: DriveListItemProps) {
+function DriveListItem({ item, onDelete }: DriveListItemProps) {
   const isFolder = item.type === "folder"
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    const result = await deleteFile(Number(item.id))
+    if (result.error) {
+      toast.error(result.error)
+    } else {
+      toast.success("File deleted!")
+      onDelete()
+    }
+  }
 
   const content = (
     <div className={`grid grid-cols-12 gap-4 px-4 py-3 text-sm transition-colors hover:bg-accent ${isFolder ? "cursor-pointer" : ""}`}>
@@ -167,22 +180,32 @@ function DriveListItem({ item }: DriveListItemProps) {
       <div className="col-span-2 flex items-center text-muted-foreground">
         {isFolder ? "—" : (item.size ?? "—")}
       </div>
-      <div className="col-span-2 flex items-center capitalize text-muted-foreground">
+      <div className="col-span-1 flex items-center capitalize text-muted-foreground">
         {item.type}
+      </div>
+      <div className="col-span-1 flex items-center justify-end">
+        {!isFolder && (
+          <button
+            onClick={handleDelete}
+            className="rounded p-1 text-muted-foreground opacity-0 transition-opacity hover:text-red-400 group-hover:opacity-100"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
       </div>
     </div>
   )
 
   if (isFolder) {
     return (
-      <Link href={`/f/${item.id}`} className="block">
+      <Link href={`/f/${item.id}`} className="block group">
         {content}
       </Link>
     )
   }
 
   return (
-    <a href={item.url} target="_blank" rel="noopener noreferrer" className="block">
+    <a href={item.url} target="_blank" rel="noopener noreferrer" className="block group">
       {content}
     </a>
   )
