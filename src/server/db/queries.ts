@@ -1,10 +1,33 @@
 import { revalidateTag, unstable_cache } from "next/cache"
 import { db } from "@/server/db"
 import { files_table, folders_table } from "@/server/db/schema"
-import { eq, isNull } from "drizzle-orm"
+import { and, eq, isNull } from "drizzle-orm"
 import type { BreadcrumbItem } from "@/app/DriveClient"
 
 export const MUTATIONS = {
+  onboardUser: async function (userId: string): Promise<number> {
+    const rootFolder = await db
+      .insert(folders_table)
+      .values({
+        name: "Root",
+        parent: null,
+        ownerId: userId,
+      })
+      .$returningId()
+
+    const rootFolderId = rootFolder[0]?.id
+    if (!rootFolderId) throw new Error("Failed to create root folder")
+
+    await db.insert(folders_table).values([
+      { name: "Trash", parent: rootFolderId, ownerId: userId },
+      { name: "Shared", parent: rootFolderId, ownerId: userId },
+      { name: "Documents", parent: rootFolderId, ownerId: userId },
+    ])
+
+    revalidateTag("root-folder", "max")
+    return rootFolderId
+  },
+
   createFile: async function (input: {
     file: {
       name: string
@@ -24,13 +47,12 @@ export const MUTATIONS = {
       ownerId: input.userId,
     })
 
-    // invalidate the right cache depending on whether it's root or nested
     if (input.file.parent === null) {
-      revalidateTag("root-contents", 'max')
+      revalidateTag("root-contents", "max")
     } else {
-      revalidateTag("folder-contents", 'max')
+      revalidateTag("folder-contents", "max")
     }
-  }
+  },
 }
 
 export const getFolderContents = unstable_cache(
@@ -58,6 +80,18 @@ export const getRootContents = unstable_cache(
   { tags: ["root-contents"], revalidate: 30 }
 )
 
+export const getRootFolderForUser = unstable_cache(
+  async (userId: string) => {
+    const folder = await db
+      .select()
+      .from(folders_table)
+      .where(and(eq(folders_table.ownerId, userId), isNull(folders_table.parent)))
+    return folder[0]
+  },
+  ["root-folder"],
+  { tags: ["root-folder"], revalidate: 30 }
+)
+
 export const getBreadcrumbs = unstable_cache(
   async (folderId: number): Promise<BreadcrumbItem[]> => {
     const crumbs: BreadcrumbItem[] = []
@@ -68,9 +102,7 @@ export const getBreadcrumbs = unstable_cache(
         .select()
         .from(folders_table)
         .where(eq(folders_table.id, currentId))
-
       if (!folder) break
-
       crumbs.unshift({ id: String(folder.id), name: folder.name })
       currentId = folder.parent
     }
