@@ -98,7 +98,7 @@ export default function DriveClient({ items, breadcrumbs, folderId }: DriveClien
           <ol className="flex items-center gap-1 text-sm">
             <li className="flex items-center gap-1">
               <Link
-                href="/f"
+                href="/drive"
                 className="flex items-center gap-1.5 rounded-md px-2 py-1 transition-colors hover:bg-accent text-muted-foreground hover:text-foreground"
               >
                 <Home className="h-4 w-4" />

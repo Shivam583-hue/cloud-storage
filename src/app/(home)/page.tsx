@@ -64,16 +64,10 @@ export default function HomePage() {
         {/* CTA */}
         <div className="flex flex-col items-center gap-4 sm:flex-row">
           <Link
-            href="/sign-up"
+            href="/sign-in"
             className="group relative overflow-hidden rounded-full bg-white px-8 py-3.5 text-sm font-medium text-black transition-all hover:bg-zinc-100"
           >
             <span className="relative z-10">Get started — it&apos;s free</span>
-          </Link>
-          <Link
-            href="/f"
-            className="rounded-full border border-zinc-800 px-8 py-3.5 text-sm text-zinc-400 transition-colors hover:border-zinc-600 hover:text-zinc-200"
-          >
-            Browse your drive →
           </Link>
         </div>
       </div>

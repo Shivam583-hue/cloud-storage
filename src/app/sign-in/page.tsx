@@ -1,3 +1,5 @@
+"use client"
+
 import { SignInButton } from "@clerk/nextjs"
 
 export default function SignInPage() {
@@ -32,32 +34,17 @@ export default function SignInPage() {
             className="mb-2 text-2xl font-semibold text-white"
             style={{ fontFamily: "'Georgia', serif" }}
           >
-            Welcome back
+            Welcome
           </h1>
           <p className="mb-8 text-sm text-zinc-500">
             Sign in to access your files and folders.
           </p>
-
-          <SignInButton forceRedirectUrl="/drive" mode="modal">
+          <SignInButton forceRedirectUrl="/drive">
             <button className="w-full rounded-full bg-white py-3 text-sm font-medium text-black transition-colors hover:bg-zinc-100">
               Continue with Clerk
             </button>
           </SignInButton>
-
-          <div className="mt-6 flex items-center gap-3">
-            <div className="h-px flex-1 bg-zinc-800" />
-            <span className="text-xs text-zinc-600">or</span>
-            <div className="h-px flex-1 bg-zinc-800" />
-          </div>
-
-          <p className="mt-6 text-center text-xs text-zinc-600">
-            Don&apos;t have an account?{" "}
-            <a href="/sign-up" className="text-zinc-400 underline-offset-2 hover:underline">
-              Sign up
-            </a>
-          </p>
         </div>
-
         <footer className="mt-8 text-center text-xs text-zinc-700">
           © {new Date().getFullYear()} Ryuga Storage. All rights reserved.
         </footer>
