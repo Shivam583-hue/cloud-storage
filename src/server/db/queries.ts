@@ -74,7 +74,7 @@ export const getFolderContents = unstable_cache(
     return { folders, files, currentFolder }
   },
   ["folder-contents"],
-  { tags: ["folder-contents"] }
+  { tags: ["folder-contents"], revalidate: 30 }
 )
 
 export const getRootContents = unstable_cache(
@@ -86,7 +86,7 @@ export const getRootContents = unstable_cache(
     return { folders, files }
   },
   ["root-contents"],
-  { tags: ["root-contents"] }
+  { tags: ["root-contents"], revalidate: 30 }
 )
 
 export const getRootFolderForUser = unstable_cache(
@@ -98,7 +98,7 @@ export const getRootFolderForUser = unstable_cache(
     return folder[0]
   },
   ["root-folder"],
-  { tags: ["root-folder"] }
+  { tags: ["root-folder"], revalidate: 30 }
 )
 
 export const getBreadcrumbs = unstable_cache(
@@ -119,5 +119,5 @@ export const getBreadcrumbs = unstable_cache(
     return crumbs
   },
   ["breadcrumbs"],
-  { tags: ["breadcrumbs"] }
+  { tags: ["breadcrumbs"], revalidate: 30 }
 )
