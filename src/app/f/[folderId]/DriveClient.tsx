@@ -1,7 +1,7 @@
 "use client"
 
 import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
-import { deleteFile } from '@/server/actions'
+import { deleteFile, createFolder } from '@/server/actions'
 import { toast } from "sonner"
 import { type DriveItem, type FileType } from "@/lib/types"
 import {
@@ -13,10 +13,12 @@ import {
   ChevronRight,
   Home,
   Trash2,
+  FolderPlus,
 } from "lucide-react"
 import Link from "next/link"
 import { UploadButton } from '@/components/uploadthing'
 import { useRouter } from 'next/navigation'
+import { useState, useRef } from 'react'
 
 function getFolderIcon() {
   return <Folder className="h-5 w-5 text-blue-400" />
@@ -47,13 +49,47 @@ interface DriveClientProps {
 }
 
 export default function DriveClient({ items, breadcrumbs, folderId }: DriveClientProps) {
+  const [creatingFolder, setCreatingFolder] = useState(false)
+  const [folderName, setFolderName] = useState("")
+  const inputRef = useRef<HTMLInputElement>(null)
+  const navigate = useRouter()
+
   const sortedItems = [...items].sort((a, b) => {
     if (a.type === "folder" && b.type !== "folder") return -1
     if (a.type !== "folder" && b.type === "folder") return 1
     return a.name.localeCompare(b.name)
   })
 
-  const navigate = useRouter()
+  const handleNewFolder = () => {
+    setCreatingFolder(true)
+    setTimeout(() => inputRef.current?.focus(), 0)
+  }
+
+  const handleCreateFolder = async () => {
+    const name = folderName.trim()
+    if (!name) {
+      setCreatingFolder(false)
+      setFolderName("")
+      return
+    }
+    const result = await createFolder(name, folderId)
+    if (result.error) {
+      toast.error(result.error)
+    } else {
+      toast.success("Folder created!")
+      setTimeout(() => navigate.refresh(), 500)
+    }
+    setCreatingFolder(false)
+    setFolderName("")
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") handleCreateFolder()
+    if (e.key === "Escape") {
+      setCreatingFolder(false)
+      setFolderName("")
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -62,6 +98,13 @@ export default function DriveClient({ items, breadcrumbs, folderId }: DriveClien
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold text-foreground">Drive</h1>
             <div className="flex items-center gap-4">
+              <button
+                onClick={handleNewFolder}
+                className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <FolderPlus className="h-4 w-4" />
+                New Folder
+              </button>
               <UploadButton
                 endpoint="driveUploader"
                 input={{ folderId: String(folderId) }}
@@ -71,7 +114,7 @@ export default function DriveClient({ items, breadcrumbs, folderId }: DriveClien
                 }}
                 onClientUploadComplete={() => {
                   toast.success("File Uploaded!")
-                  navigate.refresh()
+                  setTimeout(() => navigate.refresh(), 500)
                 }}
                 onUploadError={(err) => {
                   toast.error(err.message)
@@ -111,8 +154,8 @@ export default function DriveClient({ items, breadcrumbs, folderId }: DriveClien
                 <Link
                   href={`/f/${crumb.id}`}
                   className={`flex items-center gap-1.5 rounded-md px-2 py-1 transition-colors hover:bg-accent ${index === breadcrumbs.length - 1
-                      ? "font-medium text-foreground"
-                      : "text-muted-foreground hover:text-foreground"
+                    ? "font-medium text-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                     }`}
                 >
                   {crumb.name}
@@ -132,13 +175,39 @@ export default function DriveClient({ items, breadcrumbs, folderId }: DriveClien
           </div>
 
           <div className="divide-y divide-border">
-            {sortedItems.length === 0 ? (
+            {/* Inline folder creation row */}
+            {creatingFolder && (
+              <div className="grid grid-cols-12 gap-4 px-4 py-3 text-sm">
+                <div className="col-span-6 flex items-center gap-3">
+                  <Folder className="h-5 w-5 text-blue-400" />
+                  <input
+                    ref={inputRef}
+                    value={folderName}
+                    onChange={(e) => setFolderName(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    onBlur={handleCreateFolder}
+                    placeholder="Folder name"
+                    className="flex-1 rounded border border-border bg-background px-2 py-0.5 text-sm text-foreground outline-none focus:border-blue-400"
+                  />
+                </div>
+                <div className="col-span-6 flex items-center text-xs text-muted-foreground">
+                  Press Enter to confirm, Esc to cancel
+                </div>
+              </div>
+            )}
+
+            {sortedItems.length === 0 && !creatingFolder ? (
               <div className="px-4 py-12 text-center text-muted-foreground">
                 This folder is empty
               </div>
             ) : (
               sortedItems.map((item) => (
-                <DriveListItem key={item.id} item={item} onDelete={() => navigate.refresh()} />
+                <DriveListItem key={item.id} item={item} onDelete={() => {
+                  setTimeout(() => navigate.refresh(), 500)
+                }
+                }
+                />
+
               ))
             )}
           </div>

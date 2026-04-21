@@ -6,8 +6,16 @@ import { files_table } from "./db/schema"
 import { auth } from "@clerk/nextjs/server"
 import { UTApi } from "uploadthing/server"
 import { revalidateTag } from "next/cache"
+import { MUTATIONS } from "./db/queries"
 
 const utApi = new UTApi()
+
+export async function createFolder(name: string, parentId: number) {
+  const session = await auth()
+  if (!session.userId) return { error: "Unauthorized" }
+  await MUTATIONS.createFolder({ name, parent: parentId, userId: session.userId })
+  return { success: true }
+}
 
 export async function deleteFile(fileId: number) {
   const session = await auth()

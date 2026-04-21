@@ -2,9 +2,18 @@ import { revalidateTag, unstable_cache } from "next/cache"
 import { db } from "@/server/db"
 import { files_table, folders_table } from "@/server/db/schema"
 import { and, eq, isNull } from "drizzle-orm"
-import type { BreadcrumbItem } from "@/app/DriveClient"
+import type { BreadcrumbItem } from "@/app/f/[folderId]/DriveClient"
 
 export const MUTATIONS = {
+  createFolder: async function (input: { name: string; parent: number; userId: string }) {
+    await db.insert(folders_table).values({
+      name: input.name,
+      ownerId: input.userId,
+      parent: input.parent,
+    })
+    revalidateTag("folder-contents", "max")
+    revalidateTag("root-contents", "max")
+  },
   onboardUser: async function (userId: string): Promise<number> {
     const rootFolder = await db
       .insert(folders_table)
@@ -65,7 +74,7 @@ export const getFolderContents = unstable_cache(
     return { folders, files, currentFolder }
   },
   ["folder-contents"],
-  { tags: ["folder-contents"], revalidate: 30 }
+  { tags: ["folder-contents"] }
 )
 
 export const getRootContents = unstable_cache(
@@ -77,7 +86,7 @@ export const getRootContents = unstable_cache(
     return { folders, files }
   },
   ["root-contents"],
-  { tags: ["root-contents"], revalidate: 30 }
+  { tags: ["root-contents"] }
 )
 
 export const getRootFolderForUser = unstable_cache(
@@ -89,7 +98,7 @@ export const getRootFolderForUser = unstable_cache(
     return folder[0]
   },
   ["root-folder"],
-  { tags: ["root-folder"], revalidate: 30 }
+  { tags: ["root-folder"] }
 )
 
 export const getBreadcrumbs = unstable_cache(
@@ -110,5 +119,5 @@ export const getBreadcrumbs = unstable_cache(
     return crumbs
   },
   ["breadcrumbs"],
-  { tags: ["breadcrumbs"], revalidate: 30 }
+  { tags: ["breadcrumbs"] }
 )
